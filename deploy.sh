@@ -166,8 +166,8 @@ deploy_frontend()
 		exit 1
 	fi
 	
-	FILE="$(basename $URL)"
-	STATUS="$(curl -s -u $USER:$PASS -o /dev/null -w ''%{http_code}'' -I -k $URL)"
+	FILE=$(basename "$URL")
+	STATUS=$(curl -s -u "$USER:$PASS" -o /dev/null -w ''%{http_code}'' -I -k "$URL")
 	
 	if [ "$STATUS" == "200" ]; then
 		mkdir -p "tmp"
@@ -291,7 +291,7 @@ deploy_java()
 		echo "Downloading $URL"
 		curl "-u $USER:$PASS -o tmp/$FILE -# $URL"
 		cp "tmp/$FILE" "jboss/deployments/"
-		chmod -R 755 jboss/deployments/$FILE
+		chmod -R 755 "jboss/deployments/$FILE"
 	elif [ "$FILE" == "$OLD_FILE" ]; then
 		echo "Lazy redeploy for $FILE"
 		rm -f "jboss/deployments/$FILE.*"
@@ -356,7 +356,7 @@ deploy_java()
 	if [ $status -eq 0 ]; then
 		echo "Backend deployed successfully!!"
 		# echo "Seeding Personnel Records!!"
-		seed $USER $PASS;
+		seed "$USER" "$PASS";
 		# curl -k --cert httpd/certificates/Alice1stCmdSSR.p12:changeit --cert-type P12 https://localhost/services/um/seed
 		# while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' -k --cert httpd/certificates/Alice1stCmdSSR.p12:changeit --cert-type P12 https://localhost/services/um/seed)" != "200" ]]; do 
 			# spinner $i
@@ -402,15 +402,15 @@ fi
 while [ "$1" != "" ]; do
     case $1 in
         -f | --frontend )       check_prerequisites
-								deploy_frontend $USER $PASS $2
+								deploy_frontend "$USER" "$PASS" "$2"
                                 ;;
         -j | --java )    		check_prerequisites
-								deploy_java $USER $PASS $2
+								deploy_java "$USER" "$PASS" "$2"
                                 ;;
         -s | --seed )    		seed
                                 ;;
-        -a | --all )    		deploy_frontend $USER $PASS
-								deploy_java $USER $PASS
+        -a | --all )    		deploy_frontend "$USER" "$PASS"
+								deploy_java "$USER" "$PASS"
 								seed
                                 ;;
         -h | --help )           usage
