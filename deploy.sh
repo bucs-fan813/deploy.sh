@@ -111,9 +111,9 @@ check_prerequisites()
 	files="accumulo/scripts/start-accumulo accumulo/scripts/seed-accumulo.sh accumulo/scripts/insertjckes.sh smtp/smtp.sh"
 	for file in $files
 	do
-		$(dos2unix < $file | cmp -s - $file ) >&1
-		if [[ $? -ne 0 ]]; then
-			dos2unix $file
+		$(dos2unix < "$file" | cmp -s - "$file" ) >&1
+		if [[ "$?" -ne 0 ]]; then
+			dos2unix "$file"
 		fi
 	done
 
@@ -152,7 +152,7 @@ deploy_frontend()
 	#aws s3 cp s3://castlekeep-release/dist.tar.gz tmp/dist.tar.gz --region=us-gov-west-1
 
 	#OPTION 2: Get the new WAR file from the NEXUS repo
-	if [ -z $BUILD ]; then
+	if [ -z "$BUILD" ]; then
 		URL=$(curl -s -u $USER:$PASS \
 		-H "Content-type: application/json" \
 		-H "Accept:application/json" \
@@ -161,18 +161,18 @@ deploy_frontend()
 	else
 		URL="https://nexus.di2e.net/nexus/service/local/repositories/Private_CKF_Releases/content/gov/ic/army/castlekeep/recent/ck-front-end-v2-development/recent-ck-front-end-v2-development-$BUILD.tar.gz"
 	fi
-	if [ -z $URL ]; then
+	if [ -z "$URL" ]; then
 		echo "Incorrect username or password"
 		exit 1
 	fi
 	
-	FILE=$(basename $URL)
-	STATUS=$(curl -s -u $USER:$PASS -o /dev/null -w ''%{http_code}'' -I -k $URL)
+	FILE="$(basename $URL)"
+	STATUS="$(curl -s -u $USER:$PASS -o /dev/null -w ''%{http_code}'' -I -k $URL)"
 	
-	if [ $STATUS == "200" ]; then
+	if [ "$STATUS" == "200" ]; then
 		mkdir -p "tmp"
 		curl -u "$USER:$PASS -o tmp/$FILE -# $URL";		
-	elif [ $STATUS == "404" ]; then 
+	elif [ "$STATUS" == "404" ]; then 
 		echo "Build not found for: $URL"
 		exit 1
 	else
@@ -183,7 +183,7 @@ deploy_frontend()
 	echo "Downloading: $URL"
 
 	echo "Deploying $FILE..."
-	tar -xzf tmp/$FILE --checkpoint=.100 -C tmp/;
+	tar -xzf "tmp/$FILE" --checkpoint=.100 -C tmp/;
 	echo ""
 	rm -rf httpd/htdocs/*
 	mv tmp/dist/* httpd/htdocs/
@@ -259,11 +259,11 @@ deploy_java()
 	
 	#3) Get the URL of the latest build
 	if [ -z "$BUILD" ]; then
-		URL="$(curl -s -u $USER:$PASS \
+		URL=$(curl -s -u $USER:$PASS \
 		-H Content-type: application/json \
 		-H Accept:application/json \
 		https://nexus.di2e.net/nexus/service/local/repositories/Private_CKF_Releases/content/gov/ic/army/castlekeep/recent/ck-services-development/ | \
-		jq -r '[.data[].resourceURI | select (. | endswith(".war"))][-1]')"
+		jq -r '[.data[].resourceURI | select (. | endswith(".war"))][-1]')
 	else
 		URL="https://nexus.di2e.net/nexus/service/local/repositories/Private_CKF_Releases/content/gov/ic/army/castlekeep/recent/ck-services-development/recent-ck-services-development-$BUILD.war"
 	fi
@@ -298,7 +298,7 @@ deploy_java()
 	else
 		#FILE=$OLD_FILE
 		cp "tmp/$FILE" "jboss/deployments/"
-		chmod -R 755 jboss/deployments/$FILE
+		chmod -R 755 "jboss/deployments/$FILE"
 		#echo "Using tmp/$OLD_FILE..."
 		#mv "tmp/$OLD_FILE" "jboss/deployments/"
 	fi
