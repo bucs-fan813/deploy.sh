@@ -29,7 +29,7 @@ seed()
 	# PASS=$2
 	#Get CK templates from bitbucket
 	#TODO: Get CK templates form S3
-	if [ ! -z $AWS_PATH ]; then
+	if [ ! -z "$AWS_PATH" ]; then
 		echo "We're on AWS... using S3 bucket instead of S3ninja"
 	elif [[ ! -d "s3ninja/castlekeep-templates" || ! $(ls -A "s3ninja/castlekeep-templates") ]]; then
 		echo "Copying CK templates from bitbucket"
@@ -67,7 +67,7 @@ check_prerequisites()
 	#Check to see if we are on Windows
 	if [[ ! -d "$HOME/bin" && ! -z $OS && $OS=="Windows_NT" ]]; then
 		echo "Creating $HOME/bin"
-		mkdir $HOME/bin
+		mkdir "$HOME/bin"
 	fi
 	
 	#Get jq for windows if needed
@@ -75,7 +75,7 @@ check_prerequisites()
 	#http://gnuwin32.sourceforge.net/packages.html
 	if [[ ! -z $OS && $OS=="Windows_NT" && ! -f "$HOME/bin/jq.exe" ]]; then
 		echo "Fetching JSON Parser (jq)..."
-		curl -#L -o $HOME/bin/jq.exe https://github.com/stedolan/jq/releases/download/jq-1.6/jq-win64.exe
+		curl -#L -o "$HOME/bin/jq.exe https://github.com/stedolan/jq/releases/download/jq-1.6/jq-win64.exe"
 	fi
 	
 	#Get wget for windows if needed
@@ -126,14 +126,14 @@ check_prerequisites()
 	--cert httpd/certificates/Alice1stCmdSSR_cert_out.pem \
 	https://localhost/)
 	
-	if [ $STATUS == "200" ]; then 
+	if [ "$STATUS" == "200" ]; then 
 		echo "CK Frontend is running!!"
-	elif [ $STATUS == "400" ]; then 
+	elif [ "$STATUS" == "400" ]; then 
 		echo "HTTP/1.1 400 Bad Request"
 		echo "Please check the WAR file has deployed completely in jboss/deployments/"
 		echo "Try running \"deploy.sh -j\""
 		#exit $STATUS
-	elif [ $STATUS == "403" ]; then 
+	elif [ "$STATUS" == "403" ]; then 
 		echo "HTTP/1.1 403 Forbidden error"
 		echo "Please check contents and permissions for httpd/htdocs/"
 		echo "Try running \"deploy.sh -f\""
@@ -171,7 +171,7 @@ deploy_frontend()
 	
 	if [ $STATUS == "200" ]; then
 		mkdir -p "tmp"
-		curl -u $USER:$PASS -o tmp/$FILE -# $URL;		
+		curl -u "$USER:$PASS -o tmp/$FILE -# $URL";		
 	elif [ $STATUS == "404" ]; then 
 		echo "Build not found for: $URL"
 		exit 1
@@ -234,7 +234,7 @@ deploy_java()
 				spinner $i
 				sleep .1
 				if [ -f "jboss/deployments/$OLD_FILE.failed" ]; then
-					cat jboss/deployments/$OLD_FILE.failed
+					cat "jboss/deployments/$OLD_FILE.failed"
 					echo "Backend deployment failed for $OLD_FILE :("
 					exit 1
 				fi
@@ -258,27 +258,27 @@ deploy_java()
 	#OPTION 2: Get the new WAR file from the NEXUS repo
 	
 	#3) Get the URL of the latest build
-	if [ -z $BUILD ]; then
-		URL=$(curl -s -u $USER:$PASS \
-		-H "Content-type: application/json" \
-		-H "Accept:application/json" \
+	if [ -z "$BUILD" ]; then
+		URL="$(curl -s -u $USER:$PASS \
+		-H Content-type: application/json \
+		-H Accept:application/json \
 		https://nexus.di2e.net/nexus/service/local/repositories/Private_CKF_Releases/content/gov/ic/army/castlekeep/recent/ck-services-development/ | \
-		jq -r '[.data[].resourceURI | select (. | endswith(".war"))][-1]')
+		jq -r '[.data[].resourceURI | select (. | endswith(".war"))][-1]')"
 	else
 		URL="https://nexus.di2e.net/nexus/service/local/repositories/Private_CKF_Releases/content/gov/ic/army/castlekeep/recent/ck-services-development/recent-ck-services-development-$BUILD.war"
 	fi
 	
-	if [ -z $URL ]; then
+	if [ -z "$URL" ]; then
 		echo "Incorrect username or password"
 		exit 1
 	fi
 
-	FILE=$(basename $URL)
-	STATUS=$(curl -s -u $USER:$PASS -o /dev/null -w ''%{http_code}'' -I -k $URL)	
-	if [ $STATUS == "200" ]; then
+	FILE=$("basename $URL")
+	STATUS=$("curl -s -u $USER:$PASS -o /dev/null -w ''%{http_code}'' -I -k $URL")	
+	if [ "$STATUS" == "200" ]; then
 		mkdir -p "tmp"
 		#TODO: Cleanup and merge with #4
-	elif [ $STATUS == "404" ]; then 
+	elif [ "$STATUS" == "404" ]; then 
 		echo "Build not found for: $URL"
 		exit 1
 	else
@@ -289,10 +289,10 @@ deploy_java()
 	#4) Download the latest build if there is not one already in tmp and deploy it! (look in tmp first to save time for debugging)
 	if [ ! -f "tmp/$FILE" ]; then
 		echo "Downloading $URL"
-		curl -u $USER:$PASS -o "tmp/$FILE" -# $URL
+		curl "-u $USER:$PASS -o tmp/$FILE -# $URL"
 		cp "tmp/$FILE" "jboss/deployments/"
 		chmod -R 755 jboss/deployments/$FILE
-	elif [ $FILE == $OLD_FILE ]; then
+	elif [ "$FILE" == "$OLD_FILE" ]; then
 		echo "Lazy redeploy for $FILE"
 		rm -f "jboss/deployments/$FILE.*"
 	else
@@ -336,8 +336,8 @@ deploy_java()
 		echo ""
 		rm -f "jboss/deployments/$FILE"
 		cp "tmp/$OLD_FILE" "jboss/deployments/"
-		touch jboss/deployments/$OLD_FILE.dodeploy
-		chmod 755 jboss/deployments/$OLD_FILE
+		touch "jboss/deployments/$OLD_FILE.dodeploy"
+		chmod 755 "jboss/deployments/$OLD_FILE"
 		echo "Deployment failed... rolling back"
 		status=2
 	else
